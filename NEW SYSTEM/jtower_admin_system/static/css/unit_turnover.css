@@ -1,0 +1,198 @@
+/* Re-using modal styles for consistency */
+.modal-overlay { align-items: center !important; overflow: hidden !important; padding: 0 !important; }
+.modal-box {
+  width: 1500px !important;
+  height: 92vh !important;
+  max-width: 95vw !important;
+  max-height: 92vh !important;
+  border-radius: 8px !important;
+  background: #F1F5F9 !important; /* Light professional background */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+/* PAPER STYLE from request */
+.paper {
+  width: 950px;
+  min-height: 11in; /* Standard letter height approx */
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  padding: 70px 80px 60px 80px;
+  font-family: "Times New Roman", serif;
+  position: relative;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+
+/* TITLE */
+.paper .title {
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin-bottom: 35px;
+  color: #000;
+}
+
+/* HEADER */
+.paper .header {
+  margin-right: 160px; /* Prevent text from overlapping the logo */
+}
+
+.paper .header p {
+  margin: 2px 0;
+  font-size: 18px;
+  color: #000;
+}
+
+.paper .bold { font-weight: bold; }
+
+/* LOGO */
+.paper .logo {
+  position: absolute;
+  right: 80px;
+  top: 130px; /* Adjusted to align with header text */
+  width: 140px;
+  height: auto;
+}
+
+/* SECTION */
+.paper .section {
+  margin-top: 35px;
+  font-size: 18px;
+  line-height: 1.7;
+  color: #000;
+}
+
+/* INPUT STYLE */
+.paper input {
+  border: none;
+  border-bottom: 1px solid black;
+  font-family: inherit;
+  font-size: 18px;
+  background: transparent;
+  color: #000;
+}
+.paper input:focus { outline: none; background: rgba(0,0,0,0.05); }
+
+.date-text-display {
+    display: none;
+    font-family: inherit;
+    font-size: 18px;
+    border-bottom: 1px solid black; /* Match input style on screen */
+    cursor: pointer;
+    min-width: 200px;
+}
+
+.tower-floor-text-display {
+    display: none;
+    font-family: inherit;
+    font-size: 18px;
+    border-bottom: 1px solid black;
+    cursor: pointer;
+    min-width: 180px;
+}
+
+/* LIST */
+.paper ul { margin-left: 35px; }
+
+/* FOOTER */
+.paper .footer {
+  margin-top: 60px;
+  font-size: 18px;
+  color: #000;
+}
+
+/* CONTROL NUMBER */
+.paper .control-no {
+  position: absolute;
+  bottom: 55px;
+  right: 80px;
+  color: red;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* PROFESSIONAL TOOLBAR */
+.modal-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  background: #ffffff;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.toolbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-toolbar {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.btn-secondary-custom { background: #fff; border-color: #CBD5E1; color: #475569; }
+.btn-secondary-custom:hover { background: #F8FAFC; border-color: #94A3B8; }
+.btn-primary-custom { background: #F59E0B; color: #fff; }
+.btn-primary-custom:hover { background: #D97706; }
+
+@media print {
+  @page { size: letter; margin: 0; }
+  .sidebar, .topbar, .flash-wrap, .card, .modal-overlay:not(#utoModal) { display: none !important; height: 0 !important; }
+  body, .main, .content { background: #fff !important; margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important; overflow: visible !important; display: block !important; }
+  #utoModal { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; display: block !important; visibility: visible; z-index: 9999; }
+  .modal-box { width: 100% !important; height: 100% !important; box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; background: #fff !important; overflow: visible !important; }
+  .paper { width: 100% !important; max-width: 100% !important; min-height: 0 !important; height: 100% !important; margin: 0 !important; border: none !important; box-shadow: none !important; padding: 20px 0.5in 0.5in 0.5in !important; transform: none !important; }
+  .paper input, .paper select {
+    border-bottom: none !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-left: 0; /* Align text to the left like an input */
+  }
+  #to_date { display: none !important; }
+  .date-text-display { display: inline !important; border-bottom: none !important; }
+  #tower_floor { display: none !important; }
+  .tower-floor-text-display { display: inline !important; border-bottom: none !important; }
+  .paper button, .modal-toolbar { display: none !important; }
+  .paper .logo { top: 80px !important; right: 0.5in !important; }
+  .hide-on-print { display: none !important; }
+}
+
+/* Center table content for this page only */
+.unit-turnover-table tbody td {
+  text-align: center;
+}
+.unit-turnover-table .td-actions {
+  justify-content: center;
+}
+
+  /* View Mode Styling - mimicking print layout on screen */
+  .view-mode input, .view-mode select {
+    border-bottom: none !important;
+    pointer-events: none; /* Make unclickable */
+    -webkit-appearance: none; -moz-appearance: none; appearance: none; /* Hide dropdown arrow */
+    background: transparent !important;
+  }
+  .view-mode .hide-on-print {
+    display: none !important;
+  }
