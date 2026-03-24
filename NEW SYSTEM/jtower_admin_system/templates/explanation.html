@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block title %}Explanation Reports{% endblock %}
+{% block page_title %}Explanation Reports{% endblock %}
+{% block breadcrumb %}Reports / Explanation Reports{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/explanation.css') }}">
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">📜 Explanation Report Records</div>
+    <button onclick="openExplanationModal('create', this)"
+            class="btn btn-gold btn-sm"
+            data-full-name="{{ session.full_name }}"
+            data-role="{{ session.role | capitalize }}"
+            data-next-ref="{{ next_ref }}"
+    >＋ Create New</button>
+  </div>
+
+  <form method="get" action="{{ url_for('explanation') }}">
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="search" value="{{ search }}" placeholder="Search ref, location..."/>
+      </div>
+      <select class="filter-select" name="month" onchange="this.form.submit()">
+        <option value="">Filter by Month...</option>
+        {% for m in report_months %}
+        <option value="{{ m.value }}" {% if m.value == month %}selected{% endif %}>{{ m.display }}</option>
+        {% endfor %}
+      </select>
+      <select class="filter-select" name="sort" onchange="this.form.submit()">
+        <option value="latest" {% if sort == 'latest' %}selected{% endif %}>Sort: Latest First</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Sort: Oldest First</option>
+      </select>
+      <a href="{{ url_for('explanation') }}" class="btn btn-outline btn-sm">✕ Clear</a>
+    </div>
+  </form>
+
+  <div style="padding:10px 24px 0;font-size:12.5px;color:#64748B;">
+    Showing <strong>{{ rows|length }}</strong> record(s) {% if search or month %}— <em>Filtered</em>{% endif %}
+  </div>
+
+  <div class="table-wrap" style="margin-top:8px;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ref Number</th>
+          <th>Date</th>
+          <th>Location</th>
+          <th>Department</th>
+          <th>Prepared By</th>
+          <th>Received By</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td style="color:#94A3B8;font-size:12px;">{{ loop.index }}</td>
+          <td><strong>{{ r.ref_number }}</strong></td>
+          <td style="white-space:nowrap;">{{ r.date.strftime('%B %d, %Y') if r.date else '' }}</td>
+          <td>{{ r.location }}</td>
+          <td>{{ r.department }}</td>
+          <td>{{ r.prepared_by.split('\n')[0] }}</td>
+          <td>{{ r.received_by.split('\n')[0] }}</td>
+          <td>
+            {% set s = r.status %}
+            <span class="badge
+              {% if s=='Completed' %}badge-ontrack
+              {% elif s=='Pending' %}badge-delayed
+              {% else %}badge-closed{% endif %}">{{ s }}</span>
+          </td>
+          <td>
+            <div class="td-actions">
+              <button class="btn btn-outline btn-sm" title="View"
+                onclick="openExplanationModal('view', this)"
+                data-record='{{ r | tojson | e }}'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="btn btn-outline btn-sm" title="Edit"
+                onclick="openExplanationModal('edit', this)"
+                data-record='{{ r | tojson | e }}'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="btn btn-danger btn-sm" title="Delete"
+                onclick="confirmDelete('{{ url_for('explanation_delete', rid=r.id) }}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">No explanation reports found.</div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Explanation Modal -->
+<div class="modal-overlay" id="explanationModal">
+  <div class="modal-box" style="max-width: 95vw; width: 1500px; height: 92vh; margin: 0; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+    <div class="modal-header-custom" style="padding: 15px 20px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #fff; position: sticky; top: 0; z-index: 10;">
+      <div id="explanationModalTitle" style="font-weight: 700; font-size: 16px; color: #0F172A;">Create Explanation Report</div>
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button id="headerPrintBtn" onclick="window.print()" style="display:none; background:#4a4ad0; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">🖨️ Print</button>
+        <button onclick="closeExplanationModal()" style="border: none; background: transparent; font-size: 24px; color: #64748B; cursor: pointer;">&times;</button>
+      </div>
+    </div>
+
+    <div class="modal-split-container">
+      <div class="form-section">
+        <form id="explanationForm" method="POST"
+              data-create-url="{{ url_for('explanation_new') }}"
+              data-edit-url-base="{{ url_for('explanation') }}"
+        >
+          <h2>Explanation Report Form</h2>
+
+          <label for="ex_ref">Reference Number:</label>
+          <input class="form-control" type="text" id="ex_ref" name="ref_number" oninput="updateExplanationPreview()">
+
+          <label for="ex_date">Date:</label>
+          <input class="form-control" type="date" id="ex_date" name="date" oninput="updateExplanationPreview()">
+
+          <label for="ex_location">Location:</label>
+          <input class="form-control" type="text" id="ex_location" name="location" oninput="updateExplanationPreview()">
+
+          <label for="ex_dept">Department:</label>
+          <select class="form-control" id="ex_dept" name="department" onchange="updateExplanationPreview()">
+            {% for d in ['Accounting','Security','Maintenance','Engineering','Administration','Housekeeping','Management'] %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="ex_desc">Insert Text (Body):</label>
+          <textarea class="form-control" id="ex_desc" name="description" oninput="updateExplanationPreview()" style="height: 120px;"></textarea>
+
+          <label for="ex_prepared">Prepared By:</label>
+          <textarea class="form-control" id="ex_prepared" name="prepared_by" oninput="updateExplanationPreview()" style="height: 60px;"></textarea>
+
+          <!-- Hidden received by input to maintain JS compatibility and data submission -->
+          <input type="hidden" id="ex_received" name="received_by" value="Michael P. Resilosa&#10;Finance & Accounting Manager">
+
+          <div style="display:flex; gap:10px; margin-top:20px;">
+            <button type="button" onclick="window.print()" style="background-color: #4a4ad0;">🖨️ Print / Save PDF</button>
+            <button type="submit" id="submitBtn" style="background-color: #10B981;">💾 Save</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-box">
+          <div class="header-row">
+            <img src="{{ url_for('static', filename='image/logo2.jpg') }}" class="logo" alt="Logo">
+            <div class="header-text">
+              <p class="company-name">J Tower Residences Condo Corporation Inc.</p>
+              <p class="company-address">L. Jayme St, Bakilid Mandaue City 6014, Cebu</p>
+            </div>
+            <img src="{{ url_for('static', filename='image/logo.jpg') }}" class="logo" alt="Logo">
+          </div>
+
+          <h2 class="report-title">EXPLANATION LETTER</h2>
+
+          <p><strong>Reference Number:</strong> <span id="p_ex_ref"></span></p>
+          <p><strong>Date:</strong> <span id="p_ex_date"></span></p>
+          <p><strong>Location:</strong> <span id="p_ex_location"></span></p>
+          <p><strong>Department:</strong> <span id="p_ex_dept"></span></p>
+
+          <p id="p_ex_desc" style="margin-top: 20px; white-space: pre-wrap;"></p>
+
+          <div class="signature-row" style="margin-top: 40px;">
+            <div class="signature-block">
+              <p><strong>Prepared by:</strong></p>
+              <p class="name" id="p_ex_prepared_name"></p>
+              <p class="position" id="p_ex_prepared_pos"></p>
+            </div>
+            <div class="signature-block">
+              <p><strong>Received by:</strong></p>
+              <p class="name">Michael P. Resilosa</p>
+              <p class="position">Finance & Accounting Manager</p>
+              <!-- Hidden spans to prevent JS errors -->
+              <span id="p_ex_received_name" style="display:none"></span>
+              <span id="p_ex_received_pos" style="display:none"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/explanation.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,164 @@
+
+  /* Using same classes as incident report modal for consistency */
+  .modal-overlay {
+      align-items: center !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+  }
+  .modal-box { height: 92vh !important; overflow: hidden !important; }
+
+  .modal-split-container { display: flex; flex: 1; height: 100%; overflow: hidden; }
+  .modal-split-container.view-mode .form-section { display: none !important; }
+  .modal-split-container.view-mode .preview-section { width: 100% !important; }
+  .form-section {
+      width: 40%; height: 100%; padding: 30px 25px; background: #f5f6fa;
+      display: flex; flex-direction: column; border-right: 1px solid #2949d5;
+      box-sizing: border-box; overflow-y: auto;
+  }
+  .form-section h2 { font-size: 22px; margin-bottom: 25px; color: #010a13; border-bottom: 2px solid #081e58; padding-bottom: 8px; }
+  .form-section label { font-weight: 600; margin-bottom: 6px; display: block; color: #50698d; }
+  .form-section .form-control {
+      width: 100%; padding: 8px 10px; margin-bottom: 18px; border: 1px solid #c1c7d0;
+      border-radius: 6px; font-size: 14px; font-family: Arial, sans-serif;
+  }
+  .form-section button {
+      color: #f3f0f2; padding: 12px 18px; font-size: 16px; font-weight: 600;
+      border: none; border-radius: 6px; cursor: pointer; transition: all 0.3s ease; flex: 1;
+  }
+  .preview-section { width: 60%; height: 100%; padding: 20px; background: #eaeaea; overflow-y: auto; }
+  .preview-box { background: #fff; width: 8.5in; min-height: 11in; padding: 1in; margin: auto; box-shadow: 0 0 5px rgba(0,0,0,0.1); box-sizing: border-box; }
+  .preview-box p { overflow-wrap: break-word; word-wrap: break-word; margin-bottom: 10px; }
+  .header-row { display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 25px; }
+  .logo { width: 80px; height: auto; }
+  .header-text { text-align: center; }
+  .company-name { font-weight: bold; font-size: 16px; margin: 0; }
+  .company-address { font-size: 14px; margin: 0; }
+  .report-title { font-weight: bold; margin-top: 0; margin-bottom: 25px; letter-spacing: 1px; text-align: center; }
+  .signature-row { display: flex; justify-content: space-between; }
+  .signature-block { width: 45%; }
+  .signature-block .name { text-align: center; margin-top: 25px; padding-bottom: 2px; border-bottom: 1px solid #333; min-height: 1.2em; }
+  .signature-block .position { text-align: center; margin-top: 5px; }
+
+  /* IMAGE GALLERY STYLES (from incident modal) */
+  #p_tm_images_container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+  }
+  .image-wrapper {
+      position: relative;
+      display: inline-block;
+      max-width: 48%;
+      min-width: 100px;
+      min-height: 100px;
+      max-height: 300px;
+      background: #f0f0f0;
+  }
+  .image-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: pointer;
+      user-select: none;
+  }
+  .handle { width: 8px; height: 8px; background: #4a4ad0; position: absolute; z-index: 10; display: none; }
+  .handle.nw { top: -4px; left: -4px; cursor: nwse-resize; }
+  .handle.ne { top: -4px; right: -4px; cursor: nesw-resize; }
+  .handle.sw { bottom: -4px; left: -4px; cursor: nesw-resize; }
+  .handle.se { bottom: -4px; right: -4px; cursor: nwse-resize; }
+  .image-wrapper.selected .handle { display: block; }
+
+  @media print {
+    @page { size: auto; margin: 0; }
+    
+    /* Hide background elements and siblings */
+    .sidebar, .topbar, .flash-wrap, .card, .modal-overlay:not(#transmittalModal) { 
+      display: none !important; 
+    }
+    
+    /* Reset parents to allow flow */
+    body, .main, .content {
+      background: #fff !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+      display: block !important;
+    }
+
+    /* Target the specific modal */
+    #transmittalModal { 
+      position: static !important; /* Static allows multi-page printing */
+      width: 100% !important; height: auto !important; 
+      background: #fff !important; z-index: 99999; 
+      display: block !important; visibility: visible;
+      overflow: visible !important;
+    }
+    
+    /* Reset modal internals */
+    .modal-box { 
+      width: 100% !important; height: auto !important; 
+      max-width: 100% !important; box-shadow: none !important; 
+      border: none !important; padding: 0 !important; margin: 0 !important;
+      display: block !important; overflow: visible !important;
+    }
+    
+    .modal-split-container {
+      display: block !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+    
+    /* Hide form, show preview */
+    .modal-header-custom, .form-section { display: none !important; }
+    .preview-section { 
+      width: 100% !important; padding: 0 !important; 
+      background: #fff !important; overflow: visible !important; 
+      display: block !important; height: auto !important;
+    }
+    .preview-box { 
+      width: 100% !important; min-height: 100%; 
+      margin: 0 auto !important; padding: 0.5in !important; 
+      border: none !important; box-shadow: none !important;
+    }
+    .handle { display: none !important; }
+  }
+
+/* PROFESSIONAL TABLE STYLES */
+.table-wrap {
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow-x: auto;
+}
+.table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.table-wrap th {
+    background-color: #F8FAFC;
+    padding: 16px 20px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: none;
+    border-bottom: 1px solid #E2E8F0;
+}
+.table-wrap td {
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #334155;
+    border: none;
+    border-bottom: 1px solid #E2E8F0;
+    vertical-align: middle;
+    text-align: center;
+}
+.table-wrap tbody tr:hover {
+    background-color: #F8FAFC;
+}

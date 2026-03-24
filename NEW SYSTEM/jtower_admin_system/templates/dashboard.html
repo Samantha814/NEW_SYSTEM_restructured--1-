@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+<!-- Summary Cards -->
+<div class="summary-grid">
+  <a href="{{ url_for('transmittal') }}" class="summary-card transmittal">
+    <div class="card-label">Transmittal Reports</div>
+    <div class="card-count">{{ summary.transmittal }}</div>
+  </a>
+  <a href="{{ url_for('incidents') }}" class="summary-card incident">
+    <div class="card-label">Incident Reports</div>
+    <div class="card-count">{{ summary.incident }}</div>
+  </a>
+  <a href="{{ url_for('progress') }}" class="summary-card progress">
+    <div class="card-label">Progress Reports</div>
+    <div class="card-count">{{ summary.progress }}</div>
+  </a>
+  <a href="{{ url_for('explanation') }}" class="summary-card explanation">
+    <div class="card-label">Explanation Letters</div>
+    <div class="card-count">{{ summary.explanation }}</div>
+  </a>
+  <a href="{{ url_for('unit_turnover') }}" class="summary-card unit-turnover">
+    <div class="card-label">Unit Turn Over</div>
+    <div class="card-count">{{ summary.unit_turnover }}</div>
+  </a>
+</div>
+
+<!-- Main Combined Graph -->
+<div class="chart-container">
+  <div class="chart-header">
+    <div class="chart-title">Reports Analytics</div>
+    <form method="get" style="margin:0;">
+      <select name="period" onchange="this.form.submit()" style="padding:5px 10px; border-radius:4px; border:1px solid #cbd5e1; font-size:13px;">
+        <option value="weekly" {% if period=='weekly' %}selected{% endif %}>Last 12 Weeks</option>
+        <option value="monthly" {% if period=='monthly' %}selected{% endif %}>Last 12 Months</option>
+        <option value="yearly" {% if period=='yearly' %}selected{% endif %}>Last 5 Years</option>
+      </select>
+    </form>
+  </div>
+  <div style="height: 400px; width: 100%;">
+    <canvas id="mainChart"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  
+  const chartData = {
+    labels: {{ chart_data.labels | tojson }},
+    datasets: [
+      {
+        label: 'Transmittal',
+        data: {{ chart_data.datasets.transmittal | tojson }},
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.3, fill: false
+      },
+      {
+        label: 'Incident',
+        data: {{ chart_data.datasets.incident | tojson }},
+        borderColor: '#EF4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        tension: 0.3, fill: false
+      },
+      {
+        label: 'Progress',
+        data: {{ chart_data.datasets.progress | tojson }},
+        borderColor: '#10B981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.3, fill: false
+      },
+      {
+        label: 'Explanation',
+        data: {{ chart_data.datasets.explanation | tojson }},
+        borderColor: '#F59E0B',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        tension: 0.3, fill: false
+      },
+      {
+        label: 'Unit Turn Over',
+        data: {{ chart_data.datasets.unit_turnover | tojson }},
+        borderColor: '#8B5CF6',
+        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+        tension: 0.3, fill: false
+      }
+    ]
+  };
+
+  new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom' }
+      },
+      scales: {
+        y: { 
+          beginAtZero: true, 
+          ticks: { precision: 0 } 
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

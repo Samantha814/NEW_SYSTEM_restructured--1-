@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}{% if record %}Edit{% else %}New{% endif %} Incident Report{% endblock %}
+{% block page_title %}{% if record %}Edit Incident Report{% else %}New Incident Report{% endif %}{% endblock %}
+{% block breadcrumb %}Reports / Incident Reports / {% if record %}Edit{% else %}Create New{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:820px;">
+  <div class="card-header">
+    <div class="card-title">{% if record %}✏️ Edit Report — {{ record.ref_number }}{% else %}＋ Create Incident Report{% endif %}</div>
+    <a href="{{ url_for('incidents') }}" class="btn btn-outline btn-sm">← Back to List</a>
+  </div>
+  <div class="card-body">
+    <form method="POST" enctype="multipart/form-data">
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Reference Number <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="ref_number" value="{{ ref }}"
+                 {% if record %}readonly style="background:#F8FAFC;cursor:not-allowed;"{% endif %} required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date <span style="color:red">*</span></label>
+          <input class="form-control" type="date" name="date"
+                 value="{{ record.date if record else today }}" required/>
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Incident Title <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="incident_title"
+                 value="{{ record.incident_title if record else '' }}"
+                 placeholder="Brief descriptive title of the incident" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="location"
+                 value="{{ record.location if record else '' }}"
+                 placeholder="e.g. 5th Floor, Unit 501" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department <span style="color:red">*</span></label>
+          <select class="form-control" name="department" required>
+            {% for d in ['Accounting','Security','Maintenance','Engineering','Administration','Housekeeping','Management'] %}
+            <option value="{{ d }}" {% if record and record.department==d %}selected{% elif not record and d=='Accounting' %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" name="status">
+            {% for s in ['Open','In Progress','Resolved','Closed'] %}
+            <option value="{{ s }}" {% if record and record.status==s %}selected{% elif not record and s=='Open' %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prepared By <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="prepared_by"
+                 value="{{ record.prepared_by if record else session.full_name }}"
+                 placeholder="Full name of preparer" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Noted By</label>
+          <input class="form-control" type="text" name="noted_by"
+                 value="{{ record.noted_by if record else 'Michael P. Resilosa' }}"
+                 placeholder="Finance & Accounting Manager"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Received By</label>
+          <input class="form-control" type="text" name="received_by"
+                 value="{{ record.received_by if record else '' }}"
+                 placeholder="Name of receiver"/>
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Description / Details</label>
+          <textarea class="form-control" name="description" rows="4"
+                    placeholder="Describe the incident in detail…">{{ record.description if record else '' }}</textarea>
+        </div>
+
+        <!-- IMAGE UPLOAD -->
+        <div class="form-group col-span-2">
+          <label class="form-label">Incident Image(s)</label>
+          {% if record and record.image_path %}
+          <div style="margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+            <img src="/static/uploads/{{ record.image_path }}" style="height:80px;border-radius:8px;border:1.5px solid #E2E8F0;object-fit:cover;" alt="Current image"/>
+            <span style="font-size:12.5px;color:#64748B;">Current image. Upload a new one to replace it.</span>
+          </div>
+          {% endif %}
+          <div id="dropArea" style="border:2px dashed #D1D5DB;border-radius:10px;padding:28px;text-align:center;cursor:pointer;background:#F8FAFC;transition:all .18s;"
+               onclick="document.getElementById('fileInput').click()"
+               ondragover="event.preventDefault();this.style.borderColor='#C9A227';this.style.background='#FFFDF5';"
+               ondragleave="this.style.borderColor='#D1D5DB';this.style.background='#F8FAFC';"
+               ondrop="handleDrop(event)">
+            <div id="dropContent">
+              <div style="font-size:28px;margin-bottom:6px;">📎</div>
+              <div style="font-size:13.5px;font-weight:600;color:#374151;">Click or drag & drop to upload image</div>
+              <div style="font-size:12px;color:#94A3B8;margin-top:4px;">PNG, JPG, GIF, WEBP — max 10 MB</div>
+            </div>
+            <img id="previewImg" src="" style="display:none;max-height:160px;border-radius:8px;object-fit:contain;" alt="Preview"/>
+          </div>
+          <input type="file" id="fileInput" name="image" accept="image/*" style="display:none;" onchange="previewFile(this)"/>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn-gold">
+          {% if record %}💾 Save Changes{% else %}✅ Create Report{% endif %}
+        </button>
+        <a href="{{ url_for('incidents') }}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/incidents_form.js') }}"></script>
+{% endblock %}

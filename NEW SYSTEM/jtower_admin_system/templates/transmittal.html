@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% block title %}Transmittal Reports{% endblock %}
+{% block page_title %}Transmittal Reports{% endblock %}
+{% block breadcrumb %}Reports / Transmittal Reports{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">📨 Transmittal Report Records</div>
+    <button onclick="openTransmittalModal('create', this)"
+            class="btn btn-gold btn-sm"
+            data-next-ref="{{ next_ref }}"
+            data-today="{{ today }}"
+            data-full-name="{{ session.full_name }}"
+            data-role="{{ session.role | capitalize }}"
+    >＋ Create New</button>
+  </div>
+
+  <form method="get" action="{{ url_for('transmittal') }}">
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="search" value="{{ search }}" placeholder="Search ref, subject, to/from..."/>
+      </div>
+      <select class="filter-select" name="month" onchange="this.form.submit()">
+        <option value="">Filter by Month...</option>
+        {% for m in report_months %}
+        <option value="{{ m.value }}" {% if m.value == month %}selected{% endif %}>{{ m.display }}</option>
+        {% endfor %}
+      </select>
+      <select class="filter-select" name="sort" onchange="this.form.submit()">
+        <option value="latest" {% if sort == 'latest' %}selected{% endif %}>Sort: Latest First</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Sort: Oldest First</option>
+      </select>
+      <a href="{{ url_for('transmittal') }}" class="btn btn-outline btn-sm">✕ Clear</a>
+    </div>
+  </form>
+
+  <div style="padding:10px 24px 0;font-size:12.5px;color:#64748B;">
+    Showing <strong>{{ rows|length }}</strong> record(s) {% if search or month %}— <em>Filtered</em>{% endif %}
+  </div>
+
+  <div class="table-wrap" style="margin-top:8px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Date</th>
+          <th>Department</th>
+          <th>Letter Body</th>
+          <th>Prepared By</th>
+          <th>Received By</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><strong>{{ r.subject }}</strong></td>
+          <td style="white-space:nowrap;">{{ r.date.strftime('%B %d, %Y') if r.date else '' }}</td>
+          <td>{{ r.from_party }}</td>
+          <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ r.remarks }}">{{ r.remarks }}</td>
+          <td>{{ r.prepared_by }}</td>
+          <td>{{ r.received_by }}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn btn-outline btn-sm" title="View"
+                onclick="openTransmittalModal('view', this)"
+                data-record='{{ r | tojson | e }}'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="btn btn-outline btn-sm" title="Edit"
+                onclick="openTransmittalModal('edit', this)"
+                data-record='{{ r | tojson | e }}'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="btn btn-danger btn-sm" title="Delete"
+                onclick="confirmDelete('{{ url_for('transmittal_delete', rid=r.id) }}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">No transmittal reports found.</div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Transmittal Modal -->
+<div class="modal-overlay" id="transmittalModal">
+  <div class="modal-box" style="max-width: 95vw; width: 1500px; height: 92vh; margin: 0; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+    <div class="modal-header-custom" style="padding: 15px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; background: #fff; position: sticky; top: 0; z-index: 10;">
+      <div id="transmittalModalTitle" style="font-weight: 700; font-size: 16px; color: var(--navy);">Create Transmittal Letter</div>
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button id="headerPrintBtn" onclick="window.print()" style="display:none; background:#4a4ad0; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">🖨️ Print</button>
+        <button onclick="closeTransmittalModal()" style="border: none; background: transparent; font-size: 24px; color: var(--slate); cursor: pointer;">&times;</button>
+      </div>
+    </div>
+
+    <div class="modal-split-container">
+      <div class="form-section">
+        <form id="transmittalForm" method="POST" enctype="multipart/form-data"
+              data-create-url="{{ url_for('transmittal_new') }}"
+              data-edit-url-base="{{ url_for('transmittal') }}"
+        >
+          <h2>Transmittal Form</h2>
+
+          <input type="hidden" id="tm_ref" name="ref_number">
+
+          <label for="tm_subject">Subject:</label>
+          <input class="form-control" type="text" id="tm_subject" name="subject" oninput="updateTransmittalPreview()">
+
+          <label for="tm_date">Date:</label>
+          <input class="form-control" type="date" id="tm_date" name="date" oninput="updateTransmittalPreview()">
+
+          <input type="hidden" id="tm_to_party" name="to_party" value="">
+
+          <label for="tm_from_party">Department (From):</label>
+          <input class="form-control" type="text" id="tm_from_party" name="from_party" oninput="updateTransmittalPreview()">
+
+          <label for="tm_remarks">Letter Body:</label>
+          <textarea class="form-control" id="tm_remarks" name="remarks" oninput="updateTransmittalPreview()" style="height: 120px;"></textarea>
+
+          <label for="tm_images">Upload Image(s):</label>
+          <input class="form-control" type="file" accept="image/*" id="tm_images" name="image" multiple onchange="previewTransmittalImages(event)">
+
+          <label for="tm_prepared_by">Prepared By:</label>
+          <textarea class="form-control" id="tm_prepared_by" name="prepared_by" oninput="updateTransmittalPreview()" style="height: 60px;"></textarea>
+
+          <label for="tm_received_by">Received By:</label>
+          <textarea class="form-control" id="tm_received_by" name="received_by" oninput="updateTransmittalPreview()" style="height: 60px;"></textarea>
+
+          <div style="display:flex; gap:10px; margin-top:20px;">
+            <button type="button" onclick="window.print()" style="background-color: #4a4ad0;">🖨️ Print / Save PDF</button>
+            <button type="submit" id="submitBtn" style="background-color: #10B981;">💾 Save</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-box">
+          <div class="header-row">
+            <img src="{{ url_for('static', filename='image/logo2.jpg') }}" class="logo" alt="Logo">
+            <div class="header-text">
+              <p class="company-name">J Tower Residences Condo Corporation Inc.</p>
+              <p class="company-address">L. Jayme St, Bakilid Mandaue City 6014, Cebu</p>
+            </div>
+            <img src="{{ url_for('static', filename='image/logo.jpg') }}" class="logo" alt="Logo">
+          </div>
+
+          <h2 class="report-title">TRANSMITTAL LETTER</h2>
+
+          <p><strong>Subject:</strong> <span id="p_tm_subject"></span></p>
+          <p><strong>Date:</strong> <span id="p_tm_date"></span></p>
+          <p><strong>Department:</strong> <span id="p_tm_from_party"></span></p>
+          <p id="p_tm_remarks" style="margin-top: 20px;"></p>
+
+          <p><strong>Attached Image(s):</strong></p>
+          <div id="p_tm_images_container"></div>
+
+          <div class="signature-row" style="margin-top: 40px;">
+            <div class="signature-block">
+              <p><strong>Prepared by:</strong></p>
+              <p class="name" id="p_tm_prepared_by_name"></p>
+              <p class="position" id="p_tm_prepared_by_pos"></p>
+            </div>
+            <div class="signature-block">
+              <p><strong>Received by:</strong></p>
+              <p class="name" id="p_tm_received_by_name"></p>
+              <p class="position" id="p_tm_received_by_pos"></p>
+            </div>
+          </div>
+
+          <div class="signature-row" style="margin-top: 20px;">
+            <div class="signature-block">
+              <p><strong>Noted by:</strong></p>
+              <p class="name">Michael P. Resilosa</p>
+              <p class="position">Finance & Accounting Manager</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/transmittal.css') }}"/>
+
+<script src="{{ url_for('static', filename='js/transmittal.js') }}"></script>
+{% endblock %}

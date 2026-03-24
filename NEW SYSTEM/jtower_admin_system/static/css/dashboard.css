@@ -1,0 +1,38 @@
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.summary-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  border-left: 4px solid #ccc;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.summary-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.summary-card.transmittal { border-left-color: #3B82F6; }
+.summary-card.incident { border-left-color: #EF4444; }
+.summary-card.progress { border-left-color: #10B981; }
+.summary-card.explanation { border-left-color: #F59E0B; }
+
+.card-label { font-size: 13px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; }
+.card-count { font-size: 32px; font-weight: 700; color: #0F172A; margin: 10px 0 5px; }
+
+.chart-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.chart-title { font-size: 16px; font-weight: 700; color: #0F172A; }

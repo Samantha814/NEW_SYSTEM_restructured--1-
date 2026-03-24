@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}New Transmittal{% endblock %}
+{% block page_title %}New Transmittal Report{% endblock %}
+{% block breadcrumb %}Reports / Transmittal Reports / Create New{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:820px;">
+  <div class="card-header">
+    <div class="card-title">＋ Create Transmittal Report</div>
+    <a href="{{ url_for('transmittal') }}" class="btn btn-outline btn-sm">← Back to List</a>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Reference Number <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="ref_number" value="{{ ref }}" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date <span style="color:red">*</span></label>
+          <input class="form-control" type="date" name="date" value="{{ today }}" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">To <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="to_party" placeholder="Recipient name / department" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">From <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="from_party" placeholder="Sender name / department" required/>
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Subject <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="subject" placeholder="Document subject" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Documents</label>
+          <input class="form-control" type="number" name="document_count" value="1" min="1"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" name="status">
+            <option value="Pending">Pending</option>
+            <option value="Sent">Sent</option>
+            <option value="Received">Received</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prepared By <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="prepared_by"
+                 value="{{ session.full_name }}" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Received By</label>
+          <input class="form-control" type="text" name="received_by" placeholder="Name of receiver"/>
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Remarks</label>
+          <textarea class="form-control" name="remarks" placeholder="Additional notes…"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn-gold">✅ Create Report</button>
+        <a href="{{ url_for('transmittal') }}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

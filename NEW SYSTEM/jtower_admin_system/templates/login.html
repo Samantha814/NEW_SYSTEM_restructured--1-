@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+<!-- LEFT PANEL -->
+<div class="left">
+    {# Assuming you have an illustration at this path #}
+    <img src="{{ url_for('static', filename='image/remove.png') }}" alt="remove">
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+
+    <h1>Welcome back</h1>
+    <p class="subtitle">Sign in to your admin account</p>
+
+    <form method="POST" action="{{ url_for('login') }}">
+
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <div class="input-group">
+            <label for="username">Username</label>
+            <div class="input-field">
+                <span>👤</span>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="password">Password</label>
+            <div class="input-field">
+                <span>🔒</span>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+        </div>
+
+        <button type="submit">Sign In →</button>
+
+    </form>
+
+    <div class="footer">
+        J Tower Residences Condo Corporation Inc. · HOKU Property Management Services<br>
+        L. Jayme St, Bakilid Mandaue City 6014, Cebu
+    </div>
+
+</div>
+
+</div>
+
+</body>
+</html>

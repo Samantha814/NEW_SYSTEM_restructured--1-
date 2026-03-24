@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block title %}Progress Reports{% endblock %}
+{% block page_title %}Progress Reports{% endblock %}
+{% block breadcrumb %}Reports / Progress Reports{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/progress.css') }}">
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">📊 Progress Report Records</div>
+    <button onclick="openProgressModal('create', this)"
+            class="btn btn-gold btn-sm"
+            data-full-name="{{ session.full_name }}"
+            data-role="{{ session.role | capitalize }}"
+            data-next-ref="{{ next_ref }}"
+    >＋ Create New</button>
+  </div>
+
+  <form method="get" action="{{ url_for('progress') }}">
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="search" value="{{ search }}" placeholder="Search ref, employee..."/>
+      </div>
+      <select class="filter-select" name="month" onchange="this.form.submit()">
+        <option value="">Filter by Month...</option>
+        {% for m in report_months %}
+        <option value="{{ m.value }}" {% if m.value == month %}selected{% endif %}>{{ m.display }}</option>
+        {% endfor %}
+      </select>
+      <select class="filter-select" name="sort" onchange="this.form.submit()">
+        <option value="latest" {% if sort == 'latest' %}selected{% endif %}>Sort: Latest First</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Sort: Oldest First</option>
+      </select>
+      <a href="{{ url_for('progress') }}" class="btn btn-outline btn-sm">✕ Clear</a>
+    </div>
+  </form>
+
+  <div style="padding:10px 24px 0;font-size:12.5px;color:#64748B;">
+    Showing <strong>{{ rows|length }}</strong> record(s) {% if search or month %}— <em>Filtered</em>{% endif %}
+  </div>
+
+  <div class="table-wrap" style="margin-top:8px;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ref Number</th>
+          <th>Date</th>
+          <th>Employee Name</th>
+          <th>Position</th>
+          <th>Department</th>
+          <th>Reporting Period</th>
+          <th>Reviewed By</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td style="color:#94A3B8;font-size:12px;">{{ loop.index }}</td>
+          <td><strong>{{ r.ref_number }}</strong></td>
+          <td style="white-space:nowrap;">{{ r.date.strftime('%B %d, %Y') if r.date else '' }}</td>
+          <td>{{ r.employee_name }}</td>
+          <td>{{ r.employee_position }}</td>
+          <td>{{ r.department }}</td>
+          <td>{{ r.reporting_period }}</td>
+          <td>{{ r.reviewed_by }}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn btn-outline btn-sm" title="View"
+                onclick="openProgressModal('view', this)"
+                data-record='{{ r | tojson | e }}'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="btn btn-outline btn-sm" title="Edit"
+                onclick="openProgressModal('edit', this)"
+                data-record='{{ r | tojson | e }}'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="btn btn-danger btn-sm" title="Delete"
+                onclick="confirmDelete('{{ url_for('progress_delete', rid=r.id) }}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">No progress reports found.</div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal-overlay" id="progressModal">
+  <div class="modal-box" style="max-width: 95vw; width: 1500px; height: 92vh; margin: 0; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+    <div class="modal-header-custom" style="padding: 15px 20px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #fff; position: sticky; top: 0; z-index: 10;">
+      <div id="progressModalTitle" style="font-weight: 700; font-size: 16px; color: #0F172A;">Create Progress Report</div>
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button id="headerPrintBtn" onclick="window.print()" style="display:none; background:#4a4ad0; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">🖨️ Print</button>
+        <button onclick="closeProgressModal()" style="border: none; background: transparent; font-size: 24px; color: #64748B; cursor: pointer;">&times;</button>
+      </div>
+    </div>
+
+    <div class="modal-split-container">
+      <div class="form-section">
+        <form id="progressForm" method="POST"
+              data-create-url="{{ url_for('progress_new') }}"
+              data-edit-url-base="{{ url_for('progress') }}"
+        >
+          <h2>Progress Report Form</h2>
+
+          <input type="hidden" name="ref_number" id="pr_ref">
+
+          <label for="pr_date">Date:</label>
+          <input class="form-control" type="date" id="pr_date" name="date" oninput="updateProgressPreview()">
+
+          <label for="pr_emp_name">Employee Name:</label>
+          <input class="form-control" type="text" id="pr_emp_name" name="employee_name" oninput="updateProgressPreview()">
+
+          <label for="pr_emp_pos">Position:</label>
+          <input class="form-control" type="text" id="pr_emp_pos" name="employee_position" oninput="updateProgressPreview()">
+
+          <label for="pr_dept">Department:</label>
+          <select class="form-control" id="pr_dept" name="department" onchange="updateProgressPreview()">
+            {% for d in ['Accounting','Security','Maintenance','Engineering','Administration','Housekeeping','Management'] %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="pr_period">Reporting Period:</label>
+          <input class="form-control" type="text" id="pr_period" name="reporting_period" placeholder="e.g. October 1-15, 2023" oninput="updateProgressPreview()">
+
+          <hr style="border:0; border-top:1px solid #ccc; margin: 20px 0;">
+          <div style="font-weight:bold; color:#081e58; margin-bottom:10px;">Report Details</div>
+
+          <label>1. Work Accomplishments</label>
+          <textarea class="form-control" id="pr_sec1" name="work_accomplishments" style="height:80px;" oninput="updateProgressPreview()"></textarea>
+
+          <label>2. Tasks Completed</label>
+          <textarea class="form-control" id="pr_sec2" name="tasks_completed" style="height:80px;" oninput="updateProgressPreview()"></textarea>
+
+          <label>3. Issues or Concerns Encountered</label>
+          <textarea class="form-control" id="pr_sec3" name="issues_concerns" style="height:80px;" oninput="updateProgressPreview()"></textarea>
+
+          <label>4. Actions Taken</label>
+          <textarea class="form-control" id="pr_sec4" name="actions_taken" style="height:80px;" oninput="updateProgressPreview()"></textarea>
+
+          <label>5. Planned Tasks / Next Steps</label>
+          <textarea class="form-control" id="pr_sec5" name="planned_tasks" style="height:80px;" oninput="updateProgressPreview()"></textarea>
+
+          <label>Remarks</label>
+          <textarea class="form-control" id="pr_remarks" name="remarks" style="height:60px;" oninput="updateProgressPreview()"></textarea>
+
+          <label for="pr_reviewer">Reviewed By:</label>
+          <input class="form-control" type="text" id="pr_reviewer" name="reviewed_by" placeholder="Name of reviewer" oninput="updateProgressPreview()">
+
+          <label for="pr_reviewer_pos">Reviewer Position:</label>
+          <input class="form-control" type="text" id="pr_reviewer_pos" name="reviewer_position" placeholder="Position" oninput="updateProgressPreview()">
+
+          <div style="display:flex; gap:10px; margin-top:20px;">
+            <button type="button" onclick="window.print()" style="background-color: #4a4ad0;">🖨️ Print / Save PDF</button>
+            <button type="submit" id="submitBtn" style="background-color: #10B981;">💾 Save</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-box">
+          <div class="header-row">
+            <img src="{{ url_for('static', filename='image/logo2.jpg') }}" class="logo" alt="Logo">
+            <div class="header-text">
+              <p class="company-name">J Tower Residences Condo Corporation Inc.</p>
+              <p class="company-address">L. Jayme St, Bakilid Mandaue City 6014, Cebu</p>
+            </div>
+            <img src="{{ url_for('static', filename='image/logo.jpg') }}" class="logo" alt="Logo">
+          </div>
+
+          <h2 class="report-title">PROGRESS REPORT</h2>
+
+          <div style="display:grid; grid-template-columns: auto 1fr; gap: 8px 15px; margin-bottom: 25px;">
+            <strong>Ref Number:</strong> <span id="p_pr_ref"></span>
+            <strong>Date:</strong> <span id="p_pr_date"></span>
+            <strong>Employee Name:</strong> <span id="p_pr_emp_name"></span>
+            <strong>Position:</strong> <span id="p_pr_emp_pos"></span>
+            <strong>Department:</strong> <span id="p_pr_dept"></span>
+            <strong>Reporting Period:</strong> <span id="p_pr_period"></span>
+          </div>
+
+          <div class="report-section">
+            <p><strong>1. Work Accomplishments</strong></p>
+            <div id="p_pr_sec1" style="margin-left: 15px; margin-bottom: 15px; white-space: pre-wrap;"></div>
+
+            <p><strong>2. Tasks Completed</strong></p>
+            <div id="p_pr_sec2" style="margin-left: 15px; margin-bottom: 15px; white-space: pre-wrap;"></div>
+
+            <p><strong>3. Issues or Concerns Encountered</strong></p>
+            <div id="p_pr_sec3" style="margin-left: 15px; margin-bottom: 15px; white-space: pre-wrap;"></div>
+
+            <p><strong>4. Actions Taken</strong></p>
+            <div id="p_pr_sec4" style="margin-left: 15px; margin-bottom: 15px; white-space: pre-wrap;"></div>
+
+            <p><strong>5. Planned Tasks / Next Steps</strong></p>
+            <div id="p_pr_sec5" style="margin-left: 15px; margin-bottom: 15px; white-space: pre-wrap;"></div>
+
+            <p><strong>Remarks:</strong></p>
+            <div id="p_pr_remarks" style="margin-left: 15px; margin-bottom: 15px; white-space: pre-wrap;"></div>
+          </div>
+
+          <div class="signature-row" style="margin-top: 40px;">
+            <div class="signature-block">
+              <p><strong>Submitted by:</strong></p>
+              <p class="name" id="p_pr_submit_name"></p>
+              <p class="position" id="p_pr_submit_pos"></p>
+            </div>
+            <div class="signature-block">
+              <p><strong>Reviewed by:</strong></p>
+              <p class="name" id="p_pr_reviewer"></p>
+              <p class="position" id="p_pr_reviewer_pos"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}New Progress Report{% endblock %}
+{% block page_title %}New Progress Report{% endblock %}
+{% block breadcrumb %}Reports / Progress Reports / Create New{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:820px;">
+  <div class="card-header">
+    <div class="card-title">＋ Create Progress Report</div>
+    <a href="{{ url_for('progress') }}" class="btn btn-outline btn-sm">← Back to List</a>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Reference Number <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="ref_number" value="{{ ref }}" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date <span style="color:red">*</span></label>
+          <input class="form-control" type="date" name="date" value="{{ today }}" required/>
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Project Name <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="project_name" placeholder="Project or task name" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department <span style="color:red">*</span></label>
+          <select class="form-control" name="department" required>
+            {% for d in ['Accounting','Security','Maintenance','Engineering','Administration','Housekeeping','Management'] %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Progress (%) <span style="color:red">*</span></label>
+          <input class="form-control" type="number" name="progress_pct"
+                 value="0" min="0" max="100"
+                 oninput="document.getElementById('pct-display').textContent=this.value+'%'"/>
+          <div style="margin-top:8px;">
+            <div class="progress-bar-bg" style="width:100%;">
+              <div id="pct-bar" class="progress-bar-fill" style="width:0%;transition:width .3s;"></div>
+            </div>
+            <span id="pct-display" style="font-size:12px;color:#64748B;margin-top:4px;display:block;">0%</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" name="status">
+            <option value="On Track">On Track</option>
+            <option value="Delayed">Delayed</option>
+            <option value="Completed">Completed</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prepared By <span style="color:red">*</span></label>
+          <input class="form-control" type="text" name="prepared_by"
+                 value="{{ session.full_name }}" required/>
+        </div>
+        <div class="form-group col-span-2">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" name="description" placeholder="Progress details, milestones achieved, blockers…"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn-gold">✅ Create Report</button>
+        <a href="{{ url_for('progress') }}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/progress_form.js') }}"></script>
+{% endblock %}

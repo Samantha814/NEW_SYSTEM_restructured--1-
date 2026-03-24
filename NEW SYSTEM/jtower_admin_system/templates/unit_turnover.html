@@ -1,0 +1,557 @@
+{% extends 'base.html' %}
+{% block title %}Unit Turn Over{% endblock %}
+{% block page_title %}Unit Turn Over{% endblock %}
+{% block breadcrumb %}Reports / Unit Turn Over{% endblock %}
+
+{% block content %}
+<style>
+/* Re-using modal styles for consistency */
+.modal-overlay { align-items: center !important; overflow: hidden !important; padding: 0 !important; }
+.modal-box {
+  width: 1500px !important;
+  height: 92vh !important;
+  max-width: 95vw !important;
+  max-height: 92vh !important;
+  border-radius: 8px !important;
+  background: #F1F5F9 !important; /* Light professional background */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+/* PAPER STYLE from request */
+.paper {
+  width: 950px;
+  min-height: 11in; /* Standard letter height approx */
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  padding: 70px 80px 60px 80px;
+  font-family: "Times New Roman", serif;
+  position: relative;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+
+/* TITLE */
+.paper .title {
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin-bottom: 35px;
+  color: #000;
+}
+
+/* HEADER */
+.paper .header {
+  margin-right: 160px; /* Prevent text from overlapping the logo */
+}
+
+.paper .header p {
+  margin: 2px 0;
+  font-size: 18px;
+  color: #000;
+}
+
+.paper .bold { font-weight: bold; }
+
+/* LOGO */
+.paper .logo {
+  position: absolute;
+  right: 80px;
+  top: 130px; /* Adjusted to align with header text */
+  width: 140px;
+  height: auto;
+}
+
+/* SECTION */
+.paper .section {
+  margin-top: 35px;
+  font-size: 18px;
+  line-height: 1.7;
+  color: #000;
+}
+
+/* INPUT STYLE */
+.paper input {
+  border: none;
+  border-bottom: 1px solid black;
+  font-family: inherit;
+  font-size: 18px;
+  background: transparent;
+  color: #000;
+}
+.paper input:focus { outline: none; background: rgba(0,0,0,0.05); }
+
+.date-text-display {
+    display: none;
+    font-family: inherit;
+    font-size: 18px;
+    border-bottom: 1px solid black; /* Match input style on screen */
+    cursor: pointer;
+    min-width: 200px;
+}
+
+.tower-floor-text-display {
+    display: none;
+    font-family: inherit;
+    font-size: 18px;
+    border-bottom: 1px solid black;
+    cursor: pointer;
+    min-width: 180px;
+}
+
+/* LIST */
+.paper ul { margin-left: 35px; }
+
+/* FOOTER */
+.paper .footer {
+  margin-top: 60px;
+  font-size: 18px;
+  color: #000;
+}
+
+/* CONTROL NUMBER */
+.paper .control-no {
+  position: absolute;
+  bottom: 55px;
+  right: 80px;
+  color: red;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* PROFESSIONAL TOOLBAR */
+.modal-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  background: #ffffff;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.toolbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-toolbar {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.btn-secondary-custom { background: #fff; border-color: #CBD5E1; color: #475569; }
+.btn-secondary-custom:hover { background: #F8FAFC; border-color: #94A3B8; }
+.btn-primary-custom { background: #F59E0B; color: #fff; }
+.btn-primary-custom:hover { background: #D97706; }
+
+@media print {
+  @page { size: letter; margin: 0; }
+  .sidebar, .topbar, .flash-wrap, .card, .modal-overlay:not(#utoModal) { display: none !important; height: 0 !important; }
+  body, .main, .content { background: #fff !important; margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important; overflow: visible !important; display: block !important; }
+  #utoModal { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; display: block !important; visibility: visible; z-index: 9999; }
+  .modal-box { width: 100% !important; height: 100% !important; box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; background: #fff !important; overflow: visible !important; }
+  .paper { width: 100% !important; max-width: 100% !important; min-height: 0 !important; height: 100% !important; margin: 0 !important; border: none !important; box-shadow: none !important; padding: 20px 0.5in 0.5in 0.5in !important; transform: none !important; }
+  .paper input, .paper select {
+    border-bottom: none !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-left: 0; /* Align text to the left like an input */
+  }
+  #to_date { display: none !important; }
+  .date-text-display { display: inline !important; border-bottom: none !important; }
+  #tower_floor { display: none !important; }
+  .tower-floor-text-display { display: inline !important; border-bottom: none !important; }
+  .paper button, .modal-toolbar { display: none !important; }
+  .paper .logo { top: 80px !important; right: 0.5in !important; }
+  .hide-on-print { display: none !important; }
+}
+
+/* Center table content for this page only */
+.unit-turnover-table tbody td {
+  text-align: center;
+}
+.unit-turnover-table .td-actions {
+  justify-content: center;
+}
+
+  /* View Mode Styling - mimicking print layout on screen */
+  .view-mode input, .view-mode select {
+    border-bottom: none !important;
+    pointer-events: none; /* Make unclickable */
+    -webkit-appearance: none; -moz-appearance: none; appearance: none; /* Hide dropdown arrow */
+    background: transparent !important;
+  }
+  .view-mode .hide-on-print {
+    display: none !important;
+  }
+</style>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">🏢 Unit Turn Over Records</div>
+    <button class="btn btn-gold btn-sm" onclick="openModal('create', this)"
+      data-next-ref="{{ next_ref }}">＋ Create New</button>
+  </div>
+
+  <form method="get" action="{{ url_for('unit_turnover') }}">
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="search" value="{{ search }}" placeholder="Search unit, owner, control no..."/>
+      </div>
+      <select class="filter-select" name="month" onchange="this.form.submit()">
+        <option value="">Filter by Month...</option>
+        {% for m in report_months %}
+        <option value="{{ m.value }}" {% if m.value == month %}selected{% endif %}>{{ m.display }}</option>
+        {% endfor %}
+      </select>
+      <select class="filter-select" name="sort" onchange="this.form.submit()">
+        <option value="latest" {% if sort == 'latest' %}selected{% endif %}>Sort: Latest First</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Sort: Oldest First</option>
+      </select>
+      <a href="{{ url_for('unit_turnover') }}" class="btn btn-outline btn-sm">✕ Clear</a>
+    </div>
+  </form>
+
+  <div style="padding:10px 24px 0;font-size:12.5px;color:#64748B;">
+    Showing <strong>{{ rows|length }}</strong> record(s) {% if search or month %}— <em>Filtered</em>{% endif %}
+  </div>
+
+  <div class="table-wrap" style="margin-top:8px;">
+    <table class="unit-turnover-table">
+      <thead>
+        <tr>
+          <th>Unit Number</th>
+          <th>Unit Owner Name</th>
+          <th>TO Date</th>
+          <th>Control Number</th>
+          <th>Unit Type</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><strong>{{ r.unit_number }}</strong></td>
+          <td>{{ r.unit_owner_name }}</td>
+          <td style="white-space:nowrap;">{{ r.to_date.strftime('%B %d, %Y') if r.to_date else '' }}</td>
+          <td>{{ r.control_number }}</td>
+          <td>{{ r.unit_type }}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn btn-outline btn-sm" title="View" onclick="openModal('view', this)" data-record='{{ r | tojson | safe }}'>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <button class="btn btn-outline btn-sm" title="Edit" onclick="openModal('edit', this)" data-record='{{ r | tojson | safe }}'>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn btn-danger btn-sm" title="Delete" onclick="confirmDelete('{{ url_for('unit_turnover_delete', rid=r.id) }}')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">No unit turnover records found.</div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="utoModal">
+  <div class="modal-box">
+    <form id="utoForm" method="post" action="{{ url_for('unit_turnover_new') }}">
+      <!-- Professional Sticky Toolbar -->
+      <div class="modal-toolbar hide-on-print">
+        <div class="toolbar-title">📝 Unit Turnover Certificate</div>
+        <div class="toolbar-actions">
+          <button type="button" class="btn-toolbar btn-secondary-custom" onclick="window.print()">🖨️ Print Certificate</button>
+          <button type="submit" id="submitBtn" class="btn-toolbar btn-primary-custom">💾 Save Record</button>
+          <button type="button" class="modal-close-btn" onclick="closeModal()" style="position:static; margin-left:10px;">✕</button>
+        </div>
+      </div>
+
+      <div style="padding: 40px 0;">
+      <div class="paper">
+        <!-- TITLE -->
+        <div class="title">
+          CLEARANCE CERTIFICATE FOR UNIT TURNOVER
+        </div>
+
+        <!-- HEADER -->
+        <div class="header">
+          <p class="bold">J TOWER RESIDENCES</p>
+          <p>Managed by <span class="bold">Hoku Property Management</span></p>
+          <p>Under <span class="bold">J Tower Residences Condominium Corporation</span></p>
+        </div>
+
+        <!-- LOGO -->
+        <img src="{{ url_for('static', filename='image/logo.jpg') }}" class="logo">
+
+        <!-- CONTENT -->
+        <div class="section">
+
+          <p>
+            <span class="bold">Date:</span>
+            <input type="date" name="to_date" id="to_date" onchange="formatDate()" required>
+            <span id="formatted_date" class="date-text-display" onclick="editDate()"></span>
+          </p>
+
+          <p>
+            <span class="bold">Unit Number:</span>
+            <input type="text" name="unit_number" id="unit_number" style="width:120px" required>
+          </p>
+
+          <p>
+            <span class="bold">Tower / Floor:</span>
+            <select name="tower_floor" id="tower_floor" onchange="formatTowerFloor()" style="width:180px; font-size: 18px; border: none; border-bottom: 1px solid black; font-family: inherit; background: transparent;">
+              <option value="">Select Floor...</option>
+              {% for i in range(1, 42) %}
+                  {% set suffix = 'th' %}
+                  {% if i % 10 == 1 and i % 100 != 11 %} {% set suffix = 'st' %}
+                  {% elif i % 10 == 2 and i % 100 != 12 %} {% set suffix = 'nd' %}
+                  {% elif i % 10 == 3 and i % 100 != 13 %} {% set suffix = 'rd' %}
+                  {% endif %}
+                  <option value="{{ i }}{{ suffix }} Floor">{{ i }}{{ suffix }} Floor</option>
+              {% endfor %}
+            </select>
+            <span id="formatted_tower_floor" class="tower-floor-text-display" onclick="editTowerFloor()"></span>
+          </p>
+
+          <!-- Hidden fields or integrated small fields for backend requirements -->
+          <p>
+            <span class="bold">Unit Owner / Recipient:</span>
+            <input type="text" name="unit_owner_name" id="unit_owner_name" style="width:320px" required>
+          </p>
+
+          <p class="hide-on-print">
+            <span class="bold">Unit Type:</span>
+            <select name="unit_type" id="unit_type" style="width:150px; font-size: 18px; border: none; border-bottom: 1px solid black; font-family: inherit; background: transparent;">
+              <option value="">Select Type...</option>
+              <option value="EU1">EU1</option>
+              <option value="EU2">EU2</option>
+              <option value="ST1">ST1</option>
+              <option value="ST2">ST2</option>
+            </select>
+          </p>
+<br>
+          <p>
+            This is to certify that the above-mentioned unit located at 
+            <b class="bold">J Tower Residences</b> has undergone final inspection and verification by the authorized representatives of 
+            <b class="bold">Hoku Property Management</b> and <b class="bold">J Tower Residences Condominium Corporation</b>.
+          </p>
+          <br>
+
+          <p>
+            Based on the inspection conducted, the unit is hereby declared:
+          </p>
+          <br>
+
+          <p class="bold" style="margin-bottom: 20px;">CLEARED FOR TURNOVER</p>
+
+          <p>The following conditions have been confirmed:</p>
+
+          <ul>
+            <li>Move –in related fees and charges billed under JTRCC.</li>
+            <li>Proof of payment made to JIPROP.</li>
+            <li>All required supporting documents is complete and on file.</li>
+            <li>Initial reading for water and electricity.</li>
+          </ul>
+          
+          <br>
+
+          <p>
+            This certificate is issued to confirm that the unit is ready for formal turnover and acceptance by the unit owner/recipient
+          </p>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+          <p class="bold">Issued by:</p>
+          <br><br>
+          <p>Michael P. Resilosa</p>
+          <p>Finance and Accounting Manager</p>
+          <p class="bold">HOKU PROPERTY MANAGEMENT</p>
+        </div>
+
+        <!-- CONTROL NUMBER -->
+        <div class="control-no" id="display_control_no"></div>
+        <input type="hidden" name="control_number" id="control_number">
+      </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(mode, btn) {
+    const modal = document.getElementById('utoModal');
+    const form = document.getElementById('utoForm');
+    const btnSubmit = document.getElementById('submitBtn');
+    const paper = document.querySelector('.paper');
+    const dateInput = document.getElementById('to_date');
+    const formattedDateSpan = document.getElementById('formatted_date');
+    const towerSelect = document.getElementById('tower_floor');
+    const formattedTowerSpan = document.getElementById('formatted_tower_floor');
+    const unitTypeSelect = document.getElementById('unit_type');
+
+    // 1. Reset to a known, editable state
+    form.reset();
+    paper.classList.remove('view-mode');
+    btnSubmit.style.display = 'inline-block';
+    formattedDateSpan.onclick = editDate;
+    dateInput.style.display = 'inline-block';
+    formattedDateSpan.style.display = 'none';
+    formattedDateSpan.textContent = '';
+    formattedTowerSpan.onclick = editTowerFloor;
+    towerSelect.style.display = 'inline-block';
+    formattedTowerSpan.style.display = 'none';
+    formattedTowerSpan.innerHTML = '';
+    unitTypeSelect.style.display = 'inline-block';
+
+    // 2. Configure based on mode
+    if (mode === 'create') {
+        form.action = "{{ url_for('unit_turnover_new') }}";
+        btnSubmit.textContent = 'Save Record';
+        
+        const nextRef = btn.dataset.nextRef;
+        document.getElementById('control_number').value = nextRef;
+        document.getElementById('display_control_no').textContent = nextRef;
+    } else { // 'edit' or 'view'
+        const data = JSON.parse(btn.dataset.record);
+        document.getElementById('control_number').value = data.control_number;
+        document.getElementById('display_control_no').textContent = data.control_number;
+        document.getElementById('unit_owner_name').value = data.unit_owner_name;
+        document.getElementById('unit_number').value = data.unit_number;
+        document.getElementById('tower_floor').value = data.tower_floor || '';
+        document.getElementById('unit_type').value = data.unit_type;
+        dateInput.value = data.to_date;
+        
+        // Update formatted display values (so they are ready if user prints immediately)
+        formatTowerFloor();
+
+        if (mode === 'edit') {
+            form.action = `/unit-turnover/${data.id}/edit`;
+            btnSubmit.textContent = 'Update Record';
+            // In edit mode, we want the date input to be visible by default.
+            // Keep inputs visible for editing
+            towerSelect.style.display = 'inline-block';
+            formattedTowerSpan.style.display = 'none';
+            unitTypeSelect.style.display = 'inline-block';
+
+            // Show date as formatted text initially (since value exists), click to edit
+            formatDate();
+        } else if (mode === 'view') {
+            btnSubmit.style.display = 'none';
+            form.action = '#';
+            paper.classList.add('view-mode');
+            // --- View-specific display logic to match print preview ---
+            dateInput.style.display = 'none';
+            formattedDateSpan.style.display = 'inline-block';
+
+            towerSelect.style.display = 'none';
+            formattedTowerSpan.style.display = 'inline-block';
+            unitTypeSelect.style.display = 'none'; // Hide select arrow in view mode via CSS or display none
+
+            if (data.to_date) {
+                const date = new Date(data.to_date);
+                const adjustedDate = new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                formattedDateSpan.textContent = adjustedDate.toLocaleDateString('en-US', options);
+            } else {
+                formattedDateSpan.textContent = '____________';
+            }
+            formattedDateSpan.onclick = null; // Disable click-to-edit in view mode
+            formattedTowerSpan.onclick = null;
+        }
+    }
+    modal.classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('utoModal').classList.remove('show');
+}
+
+function formatDate() {
+    const dateInput = document.getElementById('to_date');
+    const formattedDateSpan = document.getElementById('formatted_date');
+    
+    if (dateInput.value) {
+        // Adjust for timezone to prevent off-by-one day errors
+        const date = new Date(dateInput.value);
+        const adjustedDate = new Date(date.valueOf() + date.getTimezoneOffset() * 60 * 1000);
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        formattedDateSpan.textContent = adjustedDate.toLocaleDateString('en-US', options);
+    } else {
+        formattedDateSpan.textContent = '____________';
+    }
+
+    // Hide input, show text
+    dateInput.style.display = 'none';
+    formattedDateSpan.style.display = 'inline-block';
+}
+
+function editDate() {
+    // Prevent editing in view mode
+    if(document.querySelector('.paper').classList.contains('view-mode')) return;
+
+    const dateInput = document.getElementById('to_date');
+    const formattedDateSpan = document.getElementById('formatted_date');
+    formattedDateSpan.style.display = 'none';
+    dateInput.style.display = 'inline-block';
+    if(dateInput.showPicker) dateInput.showPicker();
+    dateInput.focus();
+}
+
+function formatTowerFloor() {
+    const select = document.getElementById('tower_floor');
+    const span = document.getElementById('formatted_tower_floor');
+    
+    if (select.value) {
+        // Converts "1st Floor" to "1<sup>st</sup> Floor"
+        span.innerHTML = select.value.replace(/(\d+)(st|nd|rd|th)/gi, '$1<sup>$2</sup>');
+    } else {
+        span.innerHTML = '____________';
+    }
+}
+
+function editTowerFloor() {
+    if(document.querySelector('.paper').classList.contains('view-mode')) return;
+    
+    const select = document.getElementById('tower_floor');
+    const span = document.getElementById('formatted_tower_floor');
+    span.style.display = 'none';
+    select.style.display = 'inline-block';
+    select.focus();
+}
+</script>
+{% endblock %}

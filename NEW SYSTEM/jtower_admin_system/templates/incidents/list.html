@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% block title %}Incident Reports{% endblock %}
+{% block page_title %}Incident Reports{% endblock %}
+{% block breadcrumb %}Reports / Incident Reports{% endblock %}
+
+{% block content %}
+<div class="card">
+  <!-- ACTION BAR -->
+  <div class="card-header">
+    <div class="card-title">📋 Incident Report Records</div>
+    <div style="display:flex;gap:10px;">
+      <a href="{{ url_for('incident_export', search=search, month=month, sort=sort) }}"
+         class="btn btn-success btn-sm">
+        📥 Export to Excel
+      </a>
+      <button onclick="openReportModal('create', this)" class="btn btn-gold btn-sm" data-today="{{ today }}" data-next-ref="{{ next_ref }}">
+        ＋ Create New
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <form method="get" action="{{ url_for('incidents') }}">
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" name="search" value="{{ search }}" placeholder="Search ref, title, location..."/>
+      </div>
+      <select class="filter-select" name="month" onchange="this.form.submit()">
+        <option value="">Filter by Month...</option>
+        {% for m in report_months %}
+        <option value="{{ m.value }}" {% if m.value == month %}selected{% endif %}>{{ m.display }}</option>
+        {% endfor %}
+      </select>
+      <select class="filter-select" name="sort" onchange="this.form.submit()">
+        <option value="latest" {% if sort == 'latest' %}selected{% endif %}>Sort: Latest First</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Sort: Oldest First</option>
+      </select>
+      <a href="{{ url_for('incidents') }}" class="btn btn-outline btn-sm">✕ Clear</a>
+    </div>
+  </form>
+
+  <!-- RESULTS COUNT -->
+  <div style="padding:10px 24px 0; font-size:12.5px; color:#64748B;">
+    Showing <strong>{{ rows|length }}</strong> record(s)
+    {% if search or month %}
+      — <em>Filtered</em>
+    {% endif %}
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap" style="margin-top:8px;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ref Number</th>
+          <th>Date</th>
+          <th>Location</th>
+          <th>Department</th>
+          <th>Incident Title</th>
+          <th>Letter Body</th>
+          <th>Image</th>
+          <th>Prepared By</th>
+          <th>Received By</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td style="color:#94A3B8;font-size:12px;">{{ loop.index }}</td>
+          <td><strong style="color:#0F172A;">{{ r.ref_number }}</strong></td>
+          <td style="white-space:nowrap;">{{ r.date }}</td>
+          <td>{{ r.location }}</td>
+          <td>
+            <span style="background:#F1F5F9;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;color:#334155;">
+              {{ r.department }}
+            </span>
+          </td>
+          <td>{{ r.incident_title }}</td>
+          <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ r.description }}">{{ r.description }}</td>
+          <td>
+            {% if r.image_path %}
+              <img class="img-thumb" src="/static/uploads/{{ r.image_path }}"
+                   alt="Incident image" onclick="showImg(this.src)" title="Click to enlarge"/>
+            {% else %}
+              <span class="no-img">No image</span>
+            {% endif %}
+          </td>
+          <td>{{ r.prepared_by }}</td>
+          <td>{{ r.received_by }}</td>
+          <td>
+            <div class="td-actions">
+              <button class="btn btn-outline btn-sm" title="View"
+                onclick="openReportModal('view', this)"
+                data-record='{{ r | tojson | e }}'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="btn btn-outline btn-sm" title="Edit"
+                onclick="openReportModal('edit', this)"
+                data-record='{{ r | tojson | e }}'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="btn btn-danger btn-sm" title="Delete"
+                onclick="confirmDelete('{{ url_for('incident_delete', rid=r.id) }}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="10">
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">No incident reports found.</div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="modal-overlay" id="imgModal" onclick="this.classList.remove('show')">
+  <div style="max-width:80vw;max-height:80vh;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+    <img id="imgModalSrc" src="" style="max-width:80vw;max-height:80vh;object-fit:contain;" alt=""/>
+  </div>
+</div>
+
+<!-- NEW CREATE MODAL -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal-box" style="max-width: 95vw; width: 1300px; height: 90vh; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+    
+    <!-- Modal Header -->
+    <div class="modal-header-custom" style="padding: 15px 20px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+      <div id="modalTitle" style="font-weight: 700; font-size: 16px; color: #0F172A;">Create Incident Report</div>
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button id="headerPrintBtn" onclick="window.print()" style="display:none; background:#4a4ad0; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">🖨️ Print</button>
+        <button onclick="closeReportModal()" style="border: none; background: transparent; font-size: 24px; color: #64748B; cursor: pointer;">&times;</button>
+      </div>
+    </div>
+
+    <!-- Split Container -->
+    <div class="modal-split-container">
+      
+      <!-- FORM SIDE -->
+      <div class="form-section">
+        <form method="POST" enctype="multipart/form-data" id="reportForm"
+              data-create-url="{{ url_for('incident_new') }}"
+              data-edit-url-base="{{ url_for('incidents') }}"
+        >
+          <h2>Incident Report Form</h2>
+
+          <label for="ref">Reference Number:</label>
+          <input type="text" id="ref" name="ref_number" oninput="capitalizeFirstLetter(this); updatePreview()">
+
+          <label for="date">Date:</label>
+          <input type="date" id="date" name="date" value="{{ today }}" oninput="updatePreview()">
+
+          <label for="person_name">Location:</label>
+          <input type="text" id="person_name" name="location" oninput="capitalizeFirstLetter(this); updatePreview()">
+
+          <label for="department">Department:</label>
+          <input type="text" value="Accounting" name="department" readonly>
+
+          <label for="incident_name">Incident Title:</label>
+          <select id="incident_name" name="incident_title" oninput="updatePreview()">
+            <option value="No Meter Installed">No Meter Installed</option>
+            <option value="Meter Not Functioning">Meter Not Functioning</option>
+            <option value="Meter Tampered / Suspected Tampering">Meter Tampered / Suspected Tampering</option>
+            <option value="Meter Reading Inaccessible">Meter Reading Inaccessible</option>
+            <option value="Meter Display Not Visible">Meter Display Not Visible</option>
+            <option value="Incorrect Meter Reading">Incorrect Meter Reading</option>
+            <option value="Meter Damaged">Meter Damaged</option>
+          </select>
+
+          <label for="description">Letter Body:</label>
+          <textarea id="description" name="description" oninput="capitalizeFirstLetter(this); updatePreview()"></textarea>
+
+          <label for="incident_images">Upload Incident Image(s):</label>
+          <input type="file" accept="image/*" id="incident_images" name="image" multiple onchange="previewImages(event)">
+
+          <label for="prepared">Prepared By:</label>
+          <textarea id="prepared" name="prepared_by" placeholder="Enter name/position" oninput="capitalizeFirstLetter(this); updatePreview();" style="height: 50px;"></textarea>
+
+          <label for="received">Received By:</label>
+          <textarea id="received" name="received_by" placeholder="Enter name/position" oninput="capitalizeFirstLetter(this); updatePreview();" style="height: 50px;"></textarea>
+
+          <input type="hidden" name="status" value="Open">
+
+          <button type="button" onclick="window.print()" style="margin-bottom: 10px; background-color: #4a4ad0;">Print / Save PDF</button>
+          <button type="submit" id="submitBtn" style="background-color: #10B981;">Save to Database</button>
+        </form>
+      </div>
+
+      <!-- PREVIEW SIDE -->
+      <div class="preview-section">
+        <div class="preview-box">
+
+          <div class="header-row">
+            <img src="{{ url_for('static', filename='image/logo2.jpg') }}" class="logo" alt="Logo">
+            <div class="header-text">
+              <p class="company-name">J Tower Residences Condo Corporation Inc.</p>
+              <p class="company-address">L. Jayme St, Bakilid Mandaue City 6014, Cebu</p>
+            </div>
+            <img src="{{ url_for('static', filename='image/logo.jpg') }}" class="logo" alt="Logo">
+          </div>
+
+          <h2 class="report-title">INCIDENT REPORT</h2>
+
+          <p><strong>Reference Number:</strong> <span id="p_ref"></span></p>
+          <p><strong>Date:</strong> <span id="p_date"></span></p>
+          <p><strong>Location:</strong> <span id="p_person_name"></span></p>
+          <p><strong>Department:</strong> Accounting</p>
+          <p><strong>Incident Title:</strong> <span id="p_incident_title"></span></p>
+          <p id="p_description"></p>
+
+          <p><strong>Incident Image(s):</strong></p>
+          <div id="p_images_container"></div>
+
+          <div class="signature-row">
+            <div class="signature-block">
+              <p><strong>Prepared by:</strong></p>
+              <p class="name"><span id="p_prepared"></span></p>
+              <div class="received-block">
+                <p><strong>Received by:</strong></p>
+                <p class="name"><span id="p_received"></span></p>
+              </div>
+            </div>
+            <div class="signature-block">
+              <p><strong>Noted by:</strong></p>
+              <p class="name">Michael P. Resilosa</p>
+              <p class="position">Finance & Accounting Manager</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/incidents_list.css') }}"/>
+
+<script src="{{ url_for('static', filename='js/incidents_list.js') }}"></script>
+{% endblock %}
